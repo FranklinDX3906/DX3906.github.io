@@ -1,6 +1,6 @@
 ## 主页
 
-###个人介绍
+### 个人介绍
 
 - 个人GitHub页面：[DX3906](https://github.com/FranklinDX3906/)
 
