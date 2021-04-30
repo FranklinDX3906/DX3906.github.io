@@ -1,8 +1,10 @@
-## 介绍
+## 主页
+
+###个人介绍
 
 - 个人GitHub页面：[DX3906](https://github.com/FranklinDX3906/)
 
-- 页面项目地址：[Github.io](https://github.com/FranklinDX3906/FranklinDX3906.github.io/)
+- 页面项目地址：[GitHub.io](https://github.com/FranklinDX3906/FranklinDX3906.github.io/)
 
 ### Welcome to GitHub Pages
 
