@@ -8,7 +8,10 @@
 
 ---
 
-### Welcome to GitHub Pages 使用GitHub制作个人博客
+### 小型项目
+
+- [DX3906的大乐透简易预测](http://124.221.214.139/)：基于html+Flask
+
+Welcome to GitHub Pages 使用GitHub制作个人博客0
 
 - 本页面使用[Jekyll](https://jekyllrb.com/) 作为框架制作
-
