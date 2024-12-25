@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年度大抽奖</title>
+    <style>
+        /* 修改页面整体布局 */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin-top: 50px;
+            background-color: #f5f5f5;
+        }
+
+        /* 修改字母池和数字池的样式 */
+        .pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            justify-content: center;
+            margin: 10px 0;  /* 上下间距 */
+            width: 80%;      /* 宽度占比 */
+            max-width: 800px; /* 最大宽度 */
+        }
+
+        /* 单个字母或数字的样式 */
+        .item {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* 字母池的背景色 */
+        .letters .item {
+            background-color: #e3f2fd;  /* 浅蓝色背景 */
+        }
+
+        /* 数字池的背景色 */
+        .numbers .item {
+            background-color: #fff3e0;  /* 浅橙色背景 */
+        }
+
+        /* 被选中项目的样式 */
+        .selected {
+            background-color: #4CAF50 !important;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+        }
+
+        /* 结果显示区域调整 */
+        #result {
+            text-align: center;
+            margin: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        /* 奖项标签样式 */
+        .prize-label {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* 抽奖按钮样式 */
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+        }
+
+        /* 按钮悬停效果 */
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        /* 禁用按钮的样式 */
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 历史记录区��样式 */
+        #historyResults {
+            margin-top: 30px;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        /* 历史记录中每个项目的样式 */
+        .history-item {
+            margin: 15px 0;
+            padding: 10px;
+            font-size: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* 一等奖样式 */
+        .first {
+            color: #f1c40f;           /* 金色 */
+            border-left: 4px solid #f1c40f;
+        }
+
+        /* 二等奖样式 */
+        .second {
+            color: #7f8c8d;           /* 银色 */
+            border-left: 4px solid #7f8c8d;
+        }
+
+        /* 三等奖样式 */
+        .third {
+            color: #cd7f32;           /* 铜色 */
+            border-left: 4px solid #cd7f32;
+        }
+
+        /* 按钮组样式调整 */
+        .button-group {
+            margin-top: 20px;
+        }
+
+        /* 添加 Canvas 样式 */
+        #fireworksCanvas {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: none !important;
+            z-index: 9999 !important;
+            background: transparent !important;
+        }
+
+        h1 {
+            color: #d4341f; /* 喜庆的红色 */
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #d4341f, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 10px 20px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        h1::after {
+            content: '🎉';
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        h1::before {
+            content: '🎉';
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+    </style>
+</head>
+<body>
+    <h1>年度大抽奖</h1>
+    
+    <!-- 字母池容器 -->
+    <div class="pool letters" id="letterPool"></div>
+    
+    <!-- 数字池容器 -->
+    <div class="pool numbers" id="numberPool"></div>
+
+    <!-- 结果显示区域 -->
+    <div id="result">
+        <div class="prize-label" id="prizeLabel"></div>
+        <span id="letterResult"></span>
+        <span id="numberResult"></span>
+    </div>
+
+    <!-- 按钮组 -->
+    <div class="button-group">
+        <button onclick="draw()" id="drawButton">开始抽奖</button>
+        <button onclick="reset()" id="resetButton">重置抽奖</button>
+    </div>
+
+    <!-- 历史记录区域 -->
+    <div id="historyResults"></div>
+
+    <!-- Canvas -->
+    <canvas id="fireworksCanvas"></canvas>
+
+    <script>
+        // 定义字母和数字池
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const numbers = '0123456789';
+        // 控制抽奖状态的变量
+        let isDrawing = false;        // 是否正在抽奖
+        let drawCount = 0;            // 已抽奖次数
+        const maxDraws = 3;           // 最大抽奖次数
+
+        // 初始化函数：创建字母池和数字池
+        function initializePools() {
+            const letterPool = document.getElementById('letterPool');
+            const numberPool = document.getElementById('numberPool');
+            
+            // 创建所有字母元素
+            letters.split('').forEach(letter => {
+                letterPool.innerHTML += `<div class="item">${letter}</div>`;
+            });
+            
+            // 创建所有数字元素
+            numbers.split('').forEach(number => {
+                numberPool.innerHTML += `<div class="item">${number}</div>`;
+            });
+        }
+
+        // 获取奖项名称
+        function getPrizeName(count) {
+            switch(count) {
+                case 1: return "三等奖";
+                case 2: return "二等奖";
+                case 3: return "一等奖";
+                default: return "";
+            }
+        }
+
+        // 获取奖项对应的CSS类名
+        function getPrizeClass(count) {
+            switch(count) {
+                case 1: return "third";
+                case 2: return "second";
+                case 3: return "first";
+                default: return "";
+            }
+        }
+
+        // 修改烟花特效的实现
+        function createFireworks(prizeLevel) {
+            console.log('Creating fireworks for prize level:', prizeLevel);
+            const canvas = document.getElementById('fireworksCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+                console.error('无法获取 Canvas 上下文');
+                return;
+            }
+
+            // 根据奖项设置颜色和数量
+            let color, burstCount;
+            switch(prizeLevel) {
+                case 3: // 一等奖
+                    color = '#FFD700'; // 金色
+                    burstCount = 5;    // 一等奖放5个烟花
+                    break;
+                case 2: // 二等奖
+                    color = '#C0C0C0'; // 银色
+                    burstCount = 3;    // 二等奖放3个烟花
+                    break;
+                case 1: // 三等奖
+                    color = '#CD7F32'; // 铜色
+                    burstCount = 2;    // 三等奖放2个烟花
+                    break;
+            }
+
+            // 创建单个烟花爆炸效果
+            function createBurst(centerX, centerY) {
+                let particles = [];
+                const particleCount = 30;  // 每个烟花的粒子数
+                
+                // 创建粒子
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = (Math.PI * 2 * i) / particleCount;
+                    particles.push({
+                        x: centerX,
+                        y: centerY,
+                        radius: 4,          // 粒子大小
+                        angle: angle,
+                        speed: 4,           // 粒子速度
+                        opacity: 1,
+                        life: 100          // 粒子生命周期
+                    });
+                }
+
+                function animate() {
+                    // 清除上一帧，使用完全透明的背景
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    let isAlive = false;
+
+                    // 更新和绘制所有粒子
+                    particles.forEach(particle => {
+                        if (particle.life > 0) {
+                            // 更新粒子位置
+                            particle.x += Math.cos(particle.angle) * particle.speed;
+                            particle.y += Math.sin(particle.angle) * particle.speed;
+                            particle.speed *= 0.99;  // 逐渐减速
+                            particle.life--;
+                            particle.opacity = particle.life / 100;
+
+                            // 绘制粒子
+                            ctx.beginPath();
+                            ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                            ctx.fillStyle = `${color}`;
+                            ctx.globalAlpha = particle.opacity;
+                            ctx.fill();
+
+                            isAlive = true;
+                        }
+                    });
+
+                    ctx.globalAlpha = 1;
+
+                    if (isAlive) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // 当粒子消失时，清除画布
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                }
+
+                animate();
+            }
+
+            // 在不同位置创建多个烟花
+            for (let i = 0; i < burstCount; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * (canvas.width * 0.6) + canvas.width * 0.2;
+                    const y = Math.random() * (canvas.height * 0.6) + canvas.height * 0.2;
+                    createBurst(x, y);
+                }, i * 500);  // 每隔500ms创建一个新的烟花
+            }
+
+            // 在所有烟花结束后清除画布
+            setTimeout(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }, (burstCount + 1) * 500 + 2000);
+        }
+
+        // 抽奖主函数
+        function draw() {
+            if (isDrawing || drawCount >= maxDraws) return;
+            isDrawing = true;
+            drawCount++;
+            
+            const button = document.getElementById('drawButton');
+            button.disabled = true;
+            
+            // 根据抽奖次数显示对应奖项
+            const prizeName = getPrizeName(drawCount);
+            document.getElementById('prizeLabel').textContent = prizeName;
+            
+            // 重置所有选中状态
+            document.querySelectorAll('.item').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            // 设置动画参数
+            let count = 0;
+            const duration = 20;       // 动画持续次数
+            const interval = 100;      // 动画间隔时间（毫秒）
+
+            // 开始动画
+            const animation = setInterval(() => {
+                // 随机选择字母和数字
+                const randomLetterIndex = Math.floor(Math.random() * letters.length);
+                const randomNumberIndex = Math.floor(Math.random() * numbers.length);
+
+                // 更新字母池的选中状态
+                document.querySelectorAll('.letters .item').forEach((item, index) => {
+                    item.classList.remove('selected');
+                    if (index === randomLetterIndex) item.classList.add('selected');
+                });
+
+                // 更新数字池的选中状态
+                document.querySelectorAll('.numbers .item').forEach((item, index) => {
+                    item.classList.remove('selected');
+                    if (index === randomNumberIndex) item.classList.add('selected');
+                });
+
+                count++;
+                // 动画结束处理
+                if (count >= duration) {
+                    clearInterval(animation);
+                    isDrawing = false;
+                    
+                    const letter = letters[randomLetterIndex];
+                    const number = numbers[randomNumberIndex];
+                    const historyDiv = document.getElementById('historyResults');
+                    const prizeClass = getPrizeClass(drawCount);
+                    historyDiv.innerHTML = `<div class="history-item ${prizeClass}">${prizeName}: ${letter}${number}</div>` 
+                        + historyDiv.innerHTML;
+
+                    console.log('Animation ended, triggering fireworks for draw count:', drawCount);
+                    createFireworks(drawCount);
+
+                    if (drawCount >= maxDraws) {
+                        button.disabled = true;
+                        button.textContent = '抽奖结束';
+                    } else {
+                        button.disabled = false;
+                    }
+                }
+            }, interval);
+        }
+
+        // 添加重置函数
+        function reset() {
+            // 重置抽奖次数和状态
+            drawCount = 0;
+            isDrawing = false;
+            
+            // 重置按钮状态
+            const drawButton = document.getElementById('drawButton');
+            drawButton.disabled = false;
+            drawButton.textContent = '开始抽奖';
+            
+            // 清空奖项显示
+            document.getElementById('prizeLabel').textContent = '';
+            
+            // 清空历史记录
+            document.getElementById('historyResults').innerHTML = '';
+            
+            // 移���所有选中状态
+            document.querySelectorAll('.item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // 清除烟花特效
+            const canvas = document.getElementById('fireworksCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // 添加窗口大小改变时重置 Canvas 尺寸的处理
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('fireworksCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // 页面加载时初始化
+        window.onload = function() {
+            // Canvas 初始化代码保持不变
+            const canvas = document.getElementById('fireworksCanvas');
+            if (!canvas || !canvas.getContext) {
+                console.error('您的浏览器不支持 Canvas');
+                alert('您的浏览器可能不支持 Canvas，请尝试使用最新版本的 Chrome、Firefox 或 Edge 浏览器。');
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error('无法获取 Canvas 上下文');
+                alert('无法初始�� Canvas，请尝试使用其他浏览器。');
+                return;
+            }
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // 初始化抽奖池
+            initializePools();
+            
+            // 初始显示三等奖
+            document.getElementById('prizeLabel').textContent = '三等奖';
+        };
+
+        // 确保 Canvas 样式正确设置
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                #fireworksCanvas {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    pointer-events: none !important;
+                    z-index: 9999 !important;
+                    background: transparent !important;
+                }
+            </style>
+        `);
+    </script>
+</body>
+</html>
